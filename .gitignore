@@ -1,0 +1,4 @@
+# Build artifacts from package.sh
+meshgrab-*.zip
+
+.DS_Store

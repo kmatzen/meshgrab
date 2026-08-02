@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        width: 380px; margin: 0; padding: 12px;
+        font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: #16181d; color: #d8dce3;
+      }
+      h1 { font-size: 13px; margin: 0 0 2px; letter-spacing: .04em; }
+      .sub { color: #6f7684; font-size: 11px; margin-bottom: 10px; }
+      .row { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+      .k { color: #8b93a1; }
+      .v { color: #e8ecf2; text-align: right; }
+      .box { border: 1px solid #272b33; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+      .box h2 { font-size: 11px; margin: 0 0 6px; color: #9aa3b2; font-weight: 600; letter-spacing: .06em; }
+      .tag { display: inline-block; padding: 0 5px; border-radius: 3px; font-size: 10px; }
+      .ok { background: #16351f; color: #6ee79a; }
+      .warn { background: #3a2f14; color: #e8c06a; }
+      .bad { background: #3a1a1a; color: #f08a8a; }
+      button {
+        font: inherit; padding: 7px 10px; border-radius: 5px; cursor: pointer;
+        border: 1px solid #313640; background: #1e222a; color: #dfe4ec; flex: 1;
+      }
+      button:hover:not(:disabled) { background: #262b35; }
+      button:disabled { opacity: .4; cursor: default; }
+      button.primary { background: #2b5bd7; border-color: #2b5bd7; color: #fff; }
+      button.primary:hover:not(:disabled) { background: #3568e6; }
+      .btns { display: flex; gap: 6px; margin-top: 8px; }
+      .empty { color: #6f7684; font-style: italic; }
+      .note { color: #e8c06a; font-size: 11px; margin-top: 6px; }
+      #status { margin-top: 8px; font-size: 11px; color: #8b93a1; min-height: 15px; }
+    </style>
+  </head>
+  <body>
+    <h1>MeshGrab</h1>
+    <div class="sub" id="host">—</div>
+
+    <div class="box">
+      <h2>CAPTURE</h2>
+      <div id="capture"><span class="empty">reading…</span></div>
+    </div>
+
+    <div class="box">
+      <h2>ATTRIBUTES</h2>
+      <div id="attrs"><span class="empty">—</span></div>
+    </div>
+
+    <div class="box">
+      <h2>TEXTURES</h2>
+      <div id="texs"><span class="empty">—</span></div>
+    </div>
+
+    <div class="btns">
+      <button id="refresh">Refresh</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div class="btns">
+      <button id="export" class="primary" disabled>Export GLB</button>
+    </div>
+    <div id="status"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
