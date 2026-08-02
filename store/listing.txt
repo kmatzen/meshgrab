@@ -1,0 +1,76 @@
+MeshGrab shows you what a web page actually uploaded to the GPU.
+
+When a WebGL page renders a 3D model, the geometry that reaches the driver is
+not always the geometry the source asset describes. Attributes get packed,
+quantised, padded, or dropped somewhere in the pipeline. MeshGrab hooks the
+WebGL buffer and texture upload calls before any page script runs, captures what
+goes through them, and reports it as it really is.
+
+HOW TO USE
+
+Install, then reload the page you want to inspect — the hooks install at
+document start, so a tab that was already open has none. Open the popup from the
+toolbar. There is no on-page UI; nothing about the page changes.
+
+The popup shows the inferred vertex and triangle counts, every attribute it
+detected with its real GPU format, and any textures captured. Export GLB writes
+a glTF 2.0 binary you can open in any glTF-capable tool.
+
+If the popup reports that no uploads were seen, the geometry either reached the
+GPU before the hooks ran or has not uploaded yet. Trigger a fresh upload —
+reload, or switch models if the page has a picker. Geometry often uploads
+lazily, well after the model first appears on screen.
+
+WHAT IT DETECTS
+
+  POSITION      float vec3
+  NORMAL        float vec3, or byte/short packed vec4, unpacked on export
+  TANGENT       float vec4, verified against the normal
+  TEXCOORD_0    float vec2
+  indices       16- or 32-bit
+  textures      original encoded bytes, kept from the source blob
+
+Attributes are identified by content, not by assuming a layout. A float vec4 is
+only labelled a tangent if it is unit length, carries w = +/-1, and sits
+perpendicular to the normal. Normals are separated from positions by unit-length
+testing. Vertex count is inferred by byte-weighted agreement across buffers, so
+small helper meshes such as ground grids and gizmos cannot outvote the model.
+
+A per-vertex buffer holding a single value across the whole mesh is reported as
+a dead attribute — bandwidth being paid for and not used.
+
+LIMITS
+
+Worth knowing before you rely on an export:
+
+  - Interleaved vertex buffers are not handled. If a page packs position,
+    normal and UV into one buffer, MeshGrab will not find a mesh.
+  - Quantised positions stored as normalised integers are not detected.
+  - Compressed textures (uploaded via compressedTexImage2D) are skipped.
+  - Textures loaded as img elements rather than blobs are not captured;
+    geometry still exports correctly.
+  - WebGPU is not covered.
+  - Rendering inside a worker with a transferred OffscreenCanvas is not
+    reachable, because content scripts do not run in workers.
+  - Node and world transforms are lost. Buffers are in local space and the
+    engine applies the world matrix in the shader, so a page that applies a
+    root rotation will produce an export that imports rotated.
+  - Material scalar factors are invisible; export assumes 1.0.
+  - Scenes split across many meshes export the largest primitive, not the
+    whole scene.
+
+PRIVACY
+
+MeshGrab makes no network requests of any kind. There is no server, no
+telemetry, no analytics, and no remote code. Captured data lives only in the
+memory of the tab being inspected and is discarded when that tab is closed,
+navigated, or reset. Nothing is written to extension storage.
+
+The broad host permission exists because the page you want to debug is chosen at
+runtime and cannot be known in advance; hooks must be able to install at
+document start on any origin.
+
+Source, privacy policy and issue tracker:
+https://github.com/kmatzen/meshgrab
+
+MIT licensed.
