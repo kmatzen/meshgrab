@@ -116,5 +116,22 @@ check('bufferViews within buffer', json.bufferViews.every(
   (b) => b.byteOffset + b.byteLength <= json.buffers[0].byteLength), true);
 check('normals unpacked to float vec3', json.accessors[prim.attributes.NORMAL].componentType, 5126);
 
+// --- per-site enablement helpers ------------------------------------------
+const sitesSrc = readFileSync(new URL('./sites.js', import.meta.url), 'utf8');
+const sites = new Function(sitesSrc + '\nreturn { originPatternFor, scriptIdsFor };')();
+
+console.log('');
+check('https origin -> pattern', sites.originPatternFor('https://example.com/a/b?c=1'), 'https://example.com/*');
+check('http origin -> pattern', sites.originPatternFor('http://example.com/'), 'http://example.com/*');
+check('port is dropped from pattern', sites.originPatternFor('http://localhost:8080/x'), 'http://localhost/*');
+check('chrome:// rejected', sites.originPatternFor('chrome://extensions'), null);
+check('file:// rejected', sites.originPatternFor('file:///tmp/a.html'), null);
+check('garbage rejected', sites.originPatternFor('not a url'), null);
+const ids = sites.scriptIdsFor('https://example.com/*');
+check('hooks id is slug-safe', /^hooks-[a-zA-Z0-9-]+$/.test(ids.hooks), true);
+check('bridge id is slug-safe', /^bridge-[a-zA-Z0-9-]+$/.test(ids.bridge), true);
+check('ids differ per origin',
+  sites.scriptIdsFor('https://a.com/*').hooks === sites.scriptIdsFor('https://b.com/*').hooks, false);
+
 console.log(fail ? `\n${fail} FAILED` : '\nall checks passed');
 process.exit(fail ? 1 : 0);

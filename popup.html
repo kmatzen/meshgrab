@@ -28,40 +28,82 @@
       button:disabled { opacity: .4; cursor: default; }
       button.primary { background: #2b5bd7; border-color: #2b5bd7; color: #fff; }
       button.primary:hover:not(:disabled) { background: #3568e6; }
+      button.quiet { flex: 0 0 auto; padding: 4px 8px; font-size: 11px; }
       .btns { display: flex; gap: 6px; margin-top: 8px; }
       .empty { color: #6f7684; font-style: italic; }
       .note { color: #e8c06a; font-size: 11px; margin-top: 6px; }
+      .lede { color: #b9c1cf; font-size: 11.5px; line-height: 1.5; margin: 0 0 8px; }
+      .site { color: #e8ecf2; }
       #status { margin-top: 8px; font-size: 11px; color: #8b93a1; min-height: 15px; }
+      .hidden { display: none; }
     </style>
   </head>
   <body>
     <h1>MeshGrab</h1>
     <div class="sub" id="host">—</div>
 
-    <div class="box">
-      <h2>CAPTURE</h2>
-      <div id="capture"><span class="empty">reading…</span></div>
+    <!-- shown when this origin has not been granted -->
+    <div id="gate" class="hidden">
+      <div class="box">
+        <h2>NOT ENABLED HERE</h2>
+        <p class="lede">
+          MeshGrab has no access to <span class="site" id="gate-host">this site</span> yet.
+          Enabling grants access to this one origin so the capture hooks can install
+          before the page's scripts run.
+        </p>
+        <p class="lede">The page reloads once so the first upload is caught.</p>
+        <div class="btns">
+          <button id="enable" class="primary">Enable on this site</button>
+        </div>
+      </div>
     </div>
 
-    <div class="box">
-      <h2>ATTRIBUTES</h2>
-      <div id="attrs"><span class="empty">—</span></div>
+    <!-- shown when granted but the page has not been reloaded yet -->
+    <div id="needsReload" class="hidden">
+      <div class="box">
+        <h2>RELOAD REQUIRED</h2>
+        <p class="lede">
+          This site is enabled, but the hooks are not in the current page. They install
+          at document start, so the page needs one reload.
+        </p>
+        <div class="btns">
+          <button id="reload" class="primary">Reload page</button>
+        </div>
+      </div>
     </div>
 
-    <div class="box">
-      <h2>TEXTURES</h2>
-      <div id="texs"><span class="empty">—</span></div>
+    <!-- normal capture UI -->
+    <div id="main" class="hidden">
+      <div class="box">
+        <h2>CAPTURE</h2>
+        <div id="capture"><span class="empty">reading…</span></div>
+      </div>
+
+      <div class="box">
+        <h2>ATTRIBUTES</h2>
+        <div id="attrs"><span class="empty">—</span></div>
+      </div>
+
+      <div class="box">
+        <h2>TEXTURES</h2>
+        <div id="texs"><span class="empty">—</span></div>
+      </div>
+
+      <div class="btns">
+        <button id="refresh">Refresh</button>
+        <button id="reset">Reset</button>
+      </div>
+      <div class="btns">
+        <button id="export" class="primary" disabled>Export GLB</button>
+      </div>
+      <div class="btns">
+        <button id="disable" class="quiet">Disable on this site</button>
+      </div>
     </div>
 
-    <div class="btns">
-      <button id="refresh">Refresh</button>
-      <button id="reset">Reset</button>
-    </div>
-    <div class="btns">
-      <button id="export" class="primary" disabled>Export GLB</button>
-    </div>
     <div id="status"></div>
 
+    <script src="sites.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

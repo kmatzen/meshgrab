@@ -24,18 +24,39 @@ through Chrome's normal download flow to your own machine.
 
 ## Permissions and why
 
-- `host_permissions: <all_urls>` — hooks must install at document start on
-  whatever page you choose to debug, which cannot be known in advance. This
-  grants the ability to run on any site; it is not used to send anything
-  anywhere.
-- `activeTab` — lets the popup identify and message the tab you have open.
+MeshGrab requests **no host access at install time**. It cannot read or run on
+any site until you explicitly enable that site.
+
+- `optional_host_permissions: *://*/*` — declares the set of sites you may
+  later choose from. Nothing is granted by declaring it. Clicking **Enable on
+  this site** requests access to that one origin, and Chrome shows you the
+  prompt.
+- `scripting` — registers the capture hooks for an origin you have enabled, so
+  they install at document start on subsequent loads.
+- `activeTab` — lets the popup read the current tab's URL, so it can show you
+  which site you are about to enable.
+
+Access is per-origin and reversible. **Disable on this site** revokes the
+permission and unregisters the hooks; revoking from `chrome://extensions` has
+the same effect, and the extension reconciles its registrations to match.
 
 ## Verifying this
 
-The claims above are checkable from the source, which is small and unminified:
+The claims above are checkable from the source, which is small and unminified.
+
+No network or dynamic-evaluation APIs are used anywhere:
 
 ```
-grep -rE "fetch\(|XMLHttpRequest|WebSocket|importScripts|eval\(|new Function|https?://" *.js *.html
+grep -rE "fetch\(|XMLHttpRequest|WebSocket|sendBeacon|eval\(|new Function" *.js *.html
 ```
 
-This returns nothing. There is no code path that moves data off your machine.
+This returns nothing.
+
+Two matches do exist for a broader search, and neither moves data anywhere:
+
+- `background.js` calls `importScripts('sites.js')` — the service worker loading
+  a file from inside this extension. It takes no URL and cannot fetch remotely.
+- `sites.js` contains `https://example.com` in a comment illustrating how a URL
+  is converted to an origin pattern.
+
+There is no code path that moves data off your machine.

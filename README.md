@@ -13,13 +13,18 @@ two is where rendering bugs live.
 1. Open `chrome://extensions`
 2. Enable **Developer mode**
 3. **Load unpacked** → select this directory
-4. **Reload any tab you want to capture.** Hooks install at `document_start`; a
-   tab that was already open when you installed has none.
+4. Open the page you want to inspect, click the MeshGrab icon, and choose
+   **Enable on this site**. The page reloads once so the hooks are in place
+   before its scripts run.
 
 ## Use
 
 Load a page that renders a model, then open the popup from the toolbar. There is
 no on-page UI — nothing about the page changes.
+
+The first time you use a given site the popup offers **Enable on this site**.
+That grants access to that one origin and registers the capture hooks for it;
+every later visit is captured automatically.
 
 The popup shows the inferred vertex and triangle counts, every detected
 attribute with its real GPU format, and any textures captured. **Export GLB**
@@ -99,9 +104,19 @@ Attributes are identified by **content**, not by assuming a layout:
 
 ## Permissions
 
-- `host_permissions: <all_urls>` — the hooks must install at `document_start` on
-  whatever page you are debugging, which is not known in advance.
-- `activeTab` — lets the popup identify and message the tab you are looking at.
+MeshGrab holds **no host permissions at install**. It cannot see any site until
+you enable one.
+
+- `optional_host_permissions: *://*/*` — the set of sites you may later choose
+  from. Nothing is granted until you click **Enable on this site**, which
+  requests that one origin.
+- `scripting` — registers the capture hooks for an enabled origin at
+  `document_start`. Registration persists, so later loads are captured too.
+- `activeTab` — lets the popup read the current tab's URL, so it can tell you
+  which site you are about to enable.
+
+Enabling is per-origin and reversible: **Disable on this site** revokes the
+permission and unregisters the hooks.
 
 No network access, no remote code, no analytics. See `PRIVACY.md`.
 
@@ -121,8 +136,10 @@ the structure of the emitted GLB. No browser required.
 |---|---|
 | `hooks.js` | MAIN world, `document_start`. Capture, classification, GLB build |
 | `bridge.js` | ISOLATED world. Relays between page and popup |
+| `sites.js` | Per-site enablement: origin patterns, script registration |
+| `background.js` | Keeps registrations in sync with granted permissions |
 | `popup.js` / `popup.html` | UI |
-| `selftest.mjs` | Node harness for the classifier and GLB writer |
+| `selftest.mjs` | Node harness for the classifier, GLB writer and site helpers |
 
 ## License
 

@@ -24,6 +24,8 @@ OUT="meshgrab-$(python3 -c 'import json;print(json.load(open("manifest.json"))["
 rm -f "$OUT"
 zip -qr "$OUT" \
   manifest.json \
+  background.js \
+  sites.js \
   hooks.js \
   bridge.js \
   popup.html \

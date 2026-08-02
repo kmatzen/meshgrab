@@ -1,10 +1,13 @@
 {
   "manifest_version": 3,
   "name": "MeshGrab — WebGL geometry inspector",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Capture WebGL vertex buffers and textures at upload time, classify the attributes, and export a glTF 2.0 binary.",
-  "permissions": ["activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": ["activeTab", "scripting"],
+  "optional_host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -18,21 +21,5 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["hooks.js"],
-      "run_at": "document_start",
-      "world": "MAIN",
-      "all_frames": true
-    },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["bridge.js"],
-      "run_at": "document_start",
-      "world": "ISOLATED",
-      "all_frames": true
-    }
-  ]
+  }
 }

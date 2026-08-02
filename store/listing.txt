@@ -8,9 +8,12 @@ goes through them, and reports it as it really is.
 
 HOW TO USE
 
-Install, then reload the page you want to inspect — the hooks install at
-document start, so a tab that was already open has none. Open the popup from the
-toolbar. There is no on-page UI; nothing about the page changes.
+Install, open the page you want to inspect, click the MeshGrab icon and choose
+"Enable on this site". That grants access to that one origin and reloads the
+page once, so the hooks are in place before the page's scripts run. Every later
+visit to that site is captured automatically.
+
+There is no on-page UI; nothing about the page changes.
 
 The popup shows the inferred vertex and triangle counts, every attribute it
 detected with its real GPU format, and any textures captured. Export GLB writes
@@ -66,9 +69,9 @@ telemetry, no analytics, and no remote code. Captured data lives only in the
 memory of the tab being inspected and is discarded when that tab is closed,
 navigated, or reset. Nothing is written to extension storage.
 
-The broad host permission exists because the page you want to debug is chosen at
-runtime and cannot be known in advance; hooks must be able to install at
-document start on any origin.
+MeshGrab requests no host access at install. It cannot read or run on any site
+until you enable that site, which grants one origin at a time and can be undone
+from the popup or from chrome://extensions.
 
 Source, privacy policy and issue tracker:
 https://github.com/kmatzen/meshgrab
