@@ -2,3 +2,5 @@
 meshgrab-*.zip
 
 .DS_Store
+
+# store/ holds listing assets, not part of the extension package
