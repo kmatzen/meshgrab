@@ -74,8 +74,27 @@ const refresh = async () => {
   const enabled = await isEnabled(pattern);
   if (!enabled) return showGate();
 
+  // A granted permission does not imply the hooks are registered — an extension
+  // reload clears registrations but not permissions. Repair silently rather
+  // than leaving the user on a reload prompt that can never resolve.
+  let repaired = false;
+  if (!(await isRegistered(pattern))) {
+    try {
+      await registerForOrigin(pattern);
+      repaired = true;
+    } catch (e) {
+      showReload();
+      $('status').textContent = 'could not register hooks: ' + e;
+      return;
+    }
+  }
+
   const r = await send('summary');
-  if (r.error === 'no-content-script') return showReload();
+  if (r.error === 'no-content-script') {
+    showReload();
+    if (repaired) $('status').textContent = 'hooks re-registered — reload to start capturing';
+    return;
+  }
   if (r.error) {
     showMain();
     $('capture').innerHTML = `<span class="tag bad">${r.error}</span>`;

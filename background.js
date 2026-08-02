@@ -17,12 +17,17 @@ chrome.permissions.onRemoved.addListener(async (perms) => {
   }
 });
 
-// Reconcile on install and on browser start: any registration whose origin is
-// no longer granted is removed. Covers permissions revoked while the worker was
-// not running.
+// Reconcile registrations against granted permissions, in both directions.
+//
+// Removing stale registrations is the obvious half. The other half matters more
+// in practice: reloading or updating the extension drops dynamic registrations
+// while granted optional permissions survive, leaving sites the user enabled
+// with no hooks. Without restoring them the popup reports the site as enabled
+// and nothing ever captures, and reloading the page cannot fix it.
 const reconcile = async () => {
   try {
     const scripts = await chrome.scripting.getRegisteredContentScripts();
+
     const stale = [];
     for (const s of scripts) {
       const pattern = s.matches?.[0];
@@ -30,6 +35,15 @@ const reconcile = async () => {
       if (!(await chrome.permissions.contains({ origins: [pattern] }))) stale.push(s.id);
     }
     if (stale.length) await chrome.scripting.unregisterContentScripts({ ids: stale });
+
+    const granted = await chrome.permissions.getAll();
+    for (const pattern of granted.origins || []) {
+      try {
+        await registerForOrigin(pattern);
+      } catch (e) {
+        console.warn('MeshGrab: could not restore registration for', pattern, e);
+      }
+    }
   } catch (e) {
     console.warn('MeshGrab: reconcile failed', e);
   }

@@ -118,7 +118,7 @@ check('normals unpacked to float vec3', json.accessors[prim.attributes.NORMAL].c
 
 // --- per-site enablement helpers ------------------------------------------
 const sitesSrc = readFileSync(new URL('./sites.js', import.meta.url), 'utf8');
-const sites = new Function(sitesSrc + '\nreturn { originPatternFor, scriptIdsFor };')();
+const sites = new Function(sitesSrc + '\nreturn { originPatternFor, scriptIdsFor, isRegistered };')();
 
 console.log('');
 check('https origin -> pattern', sites.originPatternFor('https://example.com/a/b?c=1'), 'https://example.com/*');
@@ -132,6 +132,22 @@ check('hooks id is slug-safe', /^hooks-[a-zA-Z0-9-]+$/.test(ids.hooks), true);
 check('bridge id is slug-safe', /^bridge-[a-zA-Z0-9-]+$/.test(ids.bridge), true);
 check('ids differ per origin',
   sites.scriptIdsFor('https://a.com/*').hooks === sites.scriptIdsFor('https://b.com/*').hooks, false);
+
+// isRegistered must require BOTH scripts. A half-registration (one id present)
+// previously read as "registered" and left the hooks silently incomplete.
+const P = 'https://example.com/*';
+const idsP = sites.scriptIdsFor(P);
+const withScripts = (list) => {
+  globalThis.chrome = { scripting: { getRegisteredContentScripts: async () => list } };
+  return sites.isRegistered(P);
+};
+check('both scripts present -> registered',
+  await withScripts([{ id: idsP.hooks }, { id: idsP.bridge }]), true);
+check('only hooks present -> not registered', await withScripts([{ id: idsP.hooks }]), false);
+check('only bridge present -> not registered', await withScripts([{ id: idsP.bridge }]), false);
+check('nothing registered -> not registered', await withScripts([]), false);
+check('another origin does not count',
+  await withScripts([{ id: sites.scriptIdsFor('https://other.com/*').hooks }]), false);
 
 console.log(fail ? `\n${fail} FAILED` : '\nall checks passed');
 process.exit(fail ? 1 : 0);

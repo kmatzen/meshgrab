@@ -6,7 +6,8 @@
 // scripts for it. Registration persists across restarts, which is what keeps
 // document_start capture working on later loads.
 
-/* exported originPatternFor, scriptIdsFor, registerForOrigin, unregisterForOrigin, isEnabled */
+/* exported originPatternFor, scriptIdsFor, registerForOrigin, unregisterForOrigin,
+   isEnabled, isRegistered */
 
 /** "https://example.com/path" -> "https://example.com/*" (null if not http/https) */
 function originPatternFor(url) {
@@ -29,6 +30,19 @@ function scriptIdsFor(pattern) {
 async function isEnabled(pattern) {
   if (!pattern) return false;
   return chrome.permissions.contains({ origins: [pattern] });
+}
+
+/**
+ * Permission and registration are independent pieces of state and they drift:
+ * reloading an unpacked extension clears dynamic registrations while granted
+ * optional permissions survive. Callers must check this separately rather than
+ * treating a granted permission as proof the hooks will run.
+ */
+async function isRegistered(pattern) {
+  if (!pattern) return false;
+  const ids = Object.values(scriptIdsFor(pattern));
+  const existing = await chrome.scripting.getRegisteredContentScripts();
+  return ids.every((id) => existing.some((s) => s.id === id));
 }
 
 async function registerForOrigin(pattern) {
