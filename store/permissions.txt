@@ -1,0 +1,67 @@
+Chrome Web Store "Privacy practices" field values for MeshGrab 1.1.0.
+Copy each block into the matching field in the developer dashboard.
+
+
+SINGLE PURPOSE
+
+Inspect the geometry a web page uploads to the GPU via WebGL, and export it as
+a glTF file for offline debugging.
+
+
+PERMISSION: scripting
+
+MeshGrab registers its capture hooks as content scripts that run at
+document_start in the MAIN world, which is required to observe a page's first
+WebGL geometry upload before any page script executes.
+chrome.scripting.registerContentScripts is used to add those scripts only for an
+origin the user has explicitly enabled via the popup, and
+chrome.scripting.unregisterContentScripts removes them when the user disables
+that origin or revokes the permission. No script is registered for any site the
+user has not enabled, and no remote code is loaded or executed.
+
+
+PERMISSION: activeTab
+
+When the user opens the popup, the extension reads the active tab's URL so it
+can show which site is about to be enabled, and exchanges messages with the
+capture hooks running in that tab. Access follows the user's explicit gesture of
+clicking the extension icon and is limited to the tab they are viewing.
+
+
+HOST PERMISSIONS (optional_host_permissions: *://*/*)
+
+MeshGrab requests no host access at install time and cannot run on any site
+until the user enables that site. The pattern declares the set of origins the
+user may later choose from; nothing is granted by declaring it. Clicking "Enable
+on this site" calls chrome.permissions.request for that single origin, and
+Chrome shows the user the prompt. The page being debugged is chosen by the user
+at runtime and cannot be known in advance, which is why a fixed list of sites
+cannot be declared. Access is revocable at any time from the popup or from
+chrome://extensions, and the extension unregisters its hooks when access is
+removed.
+
+
+REMOTE CODE
+
+No, I am not using remote code. All code is contained in the package. There are
+no calls to fetch, XMLHttpRequest, WebSocket, eval, or new Function anywhere in
+the extension.
+
+
+DATA USAGE
+
+No data is collected. MeshGrab makes no network requests of any kind: no server,
+no telemetry, no analytics, no error reporting. Captured buffers and textures
+live only in the memory of the tab being inspected and are discarded when that
+tab is closed, navigated, or reset. Nothing is written to extension storage.
+Exported glTF files are saved to the user's own machine through Chrome's normal
+download flow.
+
+Certify all three: data is not sold to third parties, is not used or transferred
+for purposes unrelated to the item's single purpose, and is not used or
+transferred to determine creditworthiness or for lending purposes.
+
+
+PRIVACY POLICY URL
+
+https://github.com/kmatzen/meshgrab/blob/main/PRIVACY.md
